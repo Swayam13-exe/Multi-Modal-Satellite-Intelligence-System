@@ -16,14 +16,28 @@ def encode_month(month):
     month_rad = 2.0 * np.pi * (month - 1) / 12.0
     return np.sin(month_rad), np.cos(month_rad)
 
-def extract_meta_features(lat, lon, month):
+def approximate_ndvi(image_tensor):
+    """
+    Approximates NDVI from RGB image tensor using (G - R) / (G + R)
+    Expects image_tensor of shape (C, H, W) normalized to [0, 1].
+    """
+    if image_tensor is None or image_tensor.shape[0] < 3:
+        return 0.0
+    r_mean = image_tensor[0].mean()
+    g_mean = image_tensor[1].mean()
+    # Compute proxy NDVI
+    ndvi = (g_mean - r_mean) / (g_mean + r_mean + 1e-6)
+    return np.clip(ndvi.item(), -1.0, 1.0)
+
+def extract_meta_features(lat, lon, month, image_tensor=None):
     """
     Combines coordinate normalization and month encoding.
-    Returns: numpy array of 4 features [lat_norm, lon_norm, sin_mo, cos_mo]
+    Returns: numpy array of 5 features [lat_norm, lon_norm, sin_mo, cos_mo, ndvi]
     """
     lat_norm, lon_norm = normalize_coordinates(lat, lon)
     sin_mo, cos_mo = encode_month(month)
-    return np.array([lat_norm, lon_norm, sin_mo, cos_mo], dtype=np.float32)
+    ndvi = approximate_ndvi(image_tensor)
+    return np.array([lat_norm, lon_norm, sin_mo, cos_mo, ndvi], dtype=np.float32)
 
 def derive_vegetation_proxy(image_tensor):
     """
