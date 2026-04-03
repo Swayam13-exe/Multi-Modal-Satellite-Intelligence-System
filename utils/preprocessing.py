@@ -54,7 +54,7 @@ class MultiModalEuroSAT(Dataset):
             
         # Get synthetic metadata
         lat, lon, month = self.synthetic_metadata[idx]
-        meta_features = extract_meta_features(lat, lon, month)
+        meta_features = extract_meta_features(lat, lon, month, image_tensor=image_tensor)
         
         # Derive synthetic targets:
         # 1. Vegetation Health Score (Regression): Base it on image greenness + noise
