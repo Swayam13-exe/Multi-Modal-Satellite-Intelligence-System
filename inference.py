@@ -2,7 +2,7 @@ import torch
 from torchvision import transforms
 from PIL import Image
 import os
-import Multi-Modal-Satellite-Intelligence-System.config
+import config
 from models.fusion_model import FusionModel
 from utils.feature_engineering import extract_meta_features
 
@@ -15,7 +15,17 @@ class FusionPredictor:
             model_path = os.path.join(config.MODEL_DIR, "best_fusion_model.pth")
             
         if os.path.exists(model_path):
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+            state_dict = torch.load(model_path, map_location=self.device)
+            # Backward compatibility check for tabular encoder
+            tab_weight_key = 'tabular_encoder.network.0.weight'
+            if tab_weight_key in state_dict and state_dict[tab_weight_key].shape[1] == 4:
+                print("Old 4-feature model detected. Applying backward compatibility padding for NDVI.")
+                old_weight = state_dict[tab_weight_key]
+                new_weight = torch.zeros((old_weight.shape[0], 5), device=old_weight.device)
+                new_weight[:, :4] = old_weight
+                state_dict[tab_weight_key] = new_weight
+            
+            self.model.load_state_dict(state_dict)
             print("Successfully loaded trained weights.")
         else:
             print("Warning: No pre-trained weights found. Using random initialization.")
@@ -35,10 +45,11 @@ class FusionPredictor:
         Runs inference on a single instance.
         """
         # Preprocess Image
-        img_tensor = self.transform(image).unsqueeze(0).to(self.device)
+        raw_tensor = self.transform(image)
+        img_tensor = raw_tensor.unsqueeze(0).to(self.device)
         
         # Preprocess Metadata
-        meta_features = extract_meta_features(lat, lon, month)
+        meta_features = extract_meta_features(lat, lon, month, image_tensor=raw_tensor)
         meta_tensor = torch.tensor(meta_features, dtype=torch.float32).unsqueeze(0).to(self.device)
         
         # Inference
