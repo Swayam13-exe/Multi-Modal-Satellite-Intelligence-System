@@ -5,7 +5,7 @@ import torch.optim as optim
 import numpy as np
 from sklearn.metrics import accuracy_score, mean_squared_error, f1_score
 
-import Multi-Modal-Satellite-Intelligence-System.config
+import config
 from models.fusion_model import FusionModel
 from utils.preprocessing import get_dataloaders
 
