@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class TabularEncoder(nn.Module):
-    def __init__(self, input_dim=4, hidden_dim=64, output_dim=128):
+    def __init__(self, input_dim=5, hidden_dim=64, output_dim=128):
         super(TabularEncoder, self).__init__()
         
         # 2-Layer MLP
