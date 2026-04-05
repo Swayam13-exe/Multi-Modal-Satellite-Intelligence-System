@@ -1,6 +1,10 @@
 # Multi-Modal Satellite Intelligence System
 **Image + Geo + Temporal Data Fusion**
 
+![Model Status](https://img.shields.io/badge/Status-Trained-brightgreen)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c)
+
 ## 🎯 Problem Statement (ISRO Relevance)
 In earth observation, relying solely on optical imagery (RGB) can lead to ambiguous predictions because land characteristics change drastically depending on geographic location and seasons. For instance, a brown patch of land might be a normal seasonal effect in summer, but could indicate severe drought or environmental risk in winter. 
 
@@ -43,12 +47,22 @@ To demonstrate multi-modal capabilities, the data loader synthetically maps temp
 ---
 
 ## 📈 Performance & Results
-Trained over 10 epochs using CUDA acceleration, the fused multi-task architecture achieves the following validation metrics:
+✅ **The model has been successfully trained.** 
+
+The fused multi-task architecture achieves the following validation metrics:
 - **Land Use Classification (Accuracy)**: `~97.5%`
 - **Vegetation Health Regression (RMSE)**: `0.20`
 - **Environmental Risk Binary (F1-Score)**: `0.70`
 
 These metrics reflect a robust convergence across all three distinct task heads simultaneously.
+
+---
+
+## 💾 Model Weights
+The best performing model state was saved automatically during training:
+- **Path**: `saved_models/best_fusion_model.pth`
+- **Size**: `~45.6 MB`
+- **Criterion**: Minimum Validation Loss (Combined)
 
 ---
 
@@ -60,7 +74,7 @@ These metrics reflect a robust convergence across all three distinct task heads 
    cd "Multi-Modal Satellite Intelligence System"
    ```
 
-2. **Create a virtual environment (Optional but Recommended):**
+2. **Create a virtual environment:**
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -74,39 +88,53 @@ These metrics reflect a robust convergence across all three distinct task heads 
 ---
 
 ## 🏋️‍♂️ How to Run Training
-Ensure you have an internet connection on the first run, as the script will automatically download the EuroSAT dataset to `/data/raw/` if it isn't found.
-
 ```bash
 python train.py
 ```
 - Parameters like Batch Size, Learning Rate, and Epochs can be tuned in `config.py`.
-- The best performing model weights will be saved in `saved_models/best_fusion_model.pth`.
+- The training script downloads the EuroSAT dataset to `/data/raw/` automatically.
+- Best weights are updated in `saved_models/best_fusion_model.pth`.
+
+---
+
+## 🧪 Quick Inference
+To use the trained model for inference in your own script:
+```python
+from inference import FusionPredictor
+from PIL import Image
+
+# Initialize predictor (automatically loads saved_models/best_fusion_model.pth)
+predictor = FusionPredictor()
+
+# Run prediction
+img = Image.open("path_to_sample.jpg")
+results = predictor.predict(img, lat=28.6139, lon=77.2090, month=5)
+print(results)
+```
 
 ---
 
 ## 🌐 How to Run the Dashboard
-You can launch the front-end to interactively assess satellite patches without retaining terminal dependencies.
+Launch the interface to interactively assess satellite patches:
 
 ```bash
 streamlit run app.py
 ```
-This will open up a local web application (usually at `http://localhost:8501`).
 1. Upload any `.jpg` or `.png` satellite patch.
-2. Adjust the sliders/inputs for metadata context (Lat, Lon, Month).
-3. Click "Run Intelligence Engine".
+2. Adjust the sliders for metadata (Lat, Lon, Month).
+3. Click "Run Intelligence Engine" to see predictions and Grad-CAM visualizations.
+
+---
+
+## 🌟 Advanced Features
+- **NDVI Approximation**: Visualizes vegetation health even from RGB data.
+- **Explainable AI (Grad-CAM)**: Displays focal heat-maps for visual transparency.
+- **Intensity Heatmaps**: Renders overlays for high-density nature hotspots.
+- **Temporal Change Detection**: Mode for extracting vegetation deltas (T1 vs T2).
 
 ---
 
 ## 🔮 Future Improvements
-- **Integration with Sentinel-2 Multispectral Data**: Extend the 3-channel RGB image encoder to a 13-channel encoder.
-- **Attention Mechanism**: Add cross-attention layers instead of pure concatenation in the fusion block to dynamically weigh metadata importance.
-- **Transformer Encoder**: Upgrade ResNet18 to a Vision Transformer (ViT) architecture for global receptive capability.
-
----
-
-## 🌟 Advanced Features (Upgraded)
-This system was upgraded to a research-grade ISRO-level standard by implementing the following advanced capabilities:
-- **NDVI Approximation**: Since EuroSAT relies on purely visual RGB, the system calculates an approximate Structural Vegetation Index directly from image pixel densities and appends it to the Tabular dimension, allowing contextually grounded inferences even without multi-spectral bands.
-- **Explainable AI (Grad-CAM)**: Generates a focal heat-map via gradient activations to precisely visualize which visual region heavily impacted the neural network's final choice.
-- **Intensity Heatmaps**: Renders overlay masks leveraging normalized vegetation prediction metrics indicating high-density nature hotspots.
-- **Temporal Change Detection**: Exposes a secondary intelligence mode enabling analysts to upload time-bracketed patches (T1 vs. T2) and extract real-time calculated vegetation deltas and pixel difference masks.
+- **Sentinel-2 Multispectral Data**: Extend to 13-channel encoders.
+- **Attention Mechanism**: Dynamic metadata weighting via cross-attention.
+- **Vision Transformer (ViT)**: Upgrade encoder architecture for global context.
