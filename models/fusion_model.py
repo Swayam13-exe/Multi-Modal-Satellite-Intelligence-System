@@ -8,7 +8,7 @@ class FusionModel(nn.Module):
         super(FusionModel, self).__init__()
         
         self.cnn_encoder = CNNEncoder(pretrained=True, output_dim=cnn_out)
-        self.tabular_encoder = TabularEncoder(input_dim=4, hidden_dim=64, output_dim=tab_out)
+        self.tabular_encoder = TabularEncoder(input_dim=5, hidden_dim=64, output_dim=tab_out)
         
         fusion_dim = cnn_out + tab_out
         
