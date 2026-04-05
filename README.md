@@ -43,28 +43,28 @@ This architecture directly mirrors the kind of multi-source fusion used in ISRO'
 │                    INPUT MODALITIES                              │
 │                                                                  │
 │   RGB Image (224×224)     Lat / Lon / Month                      │
-│         │                       │                               │
-│         ▼                       ▼                               │
-│  ┌─────────────┐       ┌──────────────────┐                     │
-│  │  ResNet18   │       │  Cyclic Encoding  │                     │
-│  │  CNN Encoder│       │  sin/cos(month)   │                     │
-│  │  (pretrained│       │  + NDVI proxy     │                     │
-│  │   ImageNet) │       │  5 → 128-D MLP    │                     │
-│  │   → 512-D   │       └────────┬─────────┘                     │
-│  └──────┬──────┘                │                               │
-│         │          ┌────────────┘                               │
-│         ▼          ▼                                            │
-│     ┌───────────────────────┐                                   │
-│     │   Fusion Layer        │                                   │
-│     │   Concat → 640-D      │                                   │
-│     │   BatchNorm + Dropout │                                   │
-│     └──────────┬────────────┘                                   │
+│         │                       │                                │
+│         ▼                       ▼                                │
+│  ┌─────────────┐       ┌──────────────────┐                      │
+│  │  ResNet18   │       │  Cyclic Encoding │                      │
+│  │  CNN Encoder│       │  sin/cos(month)  │                      │
+│  │  (pretrained│       │  + NDVI proxy    │                      │
+│  │   ImageNet) │       │  5 → 128-D MLP   │                      │
+│  │   → 512-D   │       └────────┬─────────┘                      │
+│  └──────┬──────┘                │                                │
+│         │          ┌────────────┘                                │
+│         ▼          ▼                                             │
+│     ┌───────────────────────┐                                    │
+│     │   Fusion Layer        │                                    │
+│     │   Concat → 640-D      │                                    │
+│     │   BatchNorm + Dropout │                                    │
+│     └──────────┬────────────┘                                    │
 │                │                                                 │
-│      ┌─────────┼──────────┐                                     │
-│      ▼         ▼          ▼                                     │
-│  [Head 1]  [Head 2]   [Head 3]                                  │
-│  10-class  Veg Score  Risk Flag                                 │
-│  Softmax   Sigmoid    Sigmoid                                   │
+│      ┌─────────┼──────────┐                                      │
+│      ▼         ▼          ▼                                      │
+│  [Head 1]  [Head 2]   [Head 3]                                   │
+│  10-class  Veg Score  Risk Flag                                  │
+│  Softmax   Sigmoid    Sigmoid                                    │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -206,27 +206,38 @@ results = predictor.predict_batch(samples)
 
 ```
 Multi-Modal-Satellite-Intelligence-System/
-├── app.py                    # Streamlit dashboard
-├── train.py                  # Training loop + metric saving
-├── inference.py              # FusionPredictor class
-├── config.py                 # All hyperparameters & paths
-├── requirements.txt          # Pinned dependencies
+├── app.py                      # Streamlit dashboard (3 modes)
+├── train.py                    # Training loop + metric/curve saving
+├── inference.py                # FusionPredictor — single & batch API
+├── config.py                   # All hyperparameters & paths
+├── requirements.txt            # Pinned dependencies
+│
 ├── models/
-│   └── fusion_model.py       # ResNet18 + MLP + 3-head architecture
+│   ├── cnn_encoder.py          # ResNet18 image encoder (→ 512-D)
+│   ├── tabular_encoder.py      # MLP metadata encoder (→ 128-D)
+│   └── fusion_model.py         # Fusion layer + 3-head architecture
+│
 ├── utils/
-│   ├── preprocessing.py      # EuroSAT dataloader
-│   ├── feature_engineering.py# NDVI approximation, metadata encoding
-│   ├── visualization.py      # Vegetation heatmap overlay
-│   ├── gradcam.py            # Grad-CAM implementation
-│   └── temporal_analysis.py  # Change detection utilities
-├── data/raw/eurosat/         # EuroSAT dataset (auto-downloaded)
+│   ├── preprocessing.py        # EuroSAT dataloader & transforms
+│   ├── feature_engineering.py  # NDVI approximation, metadata encoding
+│   ├── visualization.py        # Vegetation heatmap overlay
+│   ├── gradcam.py              # Grad-CAM saliency maps
+│   └── temporal_analysis.py    # Temporal change detection utilities
+│
+├── data/raw/eurosat/           # EuroSAT dataset (auto-downloaded)
+│   ├── 2750/                   # Class sub-folders
+│   └── EuroSAT.zip
+│
 ├── saved_models/
-│   └── best_fusion_model.pth # Best checkpoint (~45 MB)
-├── results/
-│   ├── training_curves.png   # Loss & metric plots
-│   ├── confusion_matrix.png  # Per-class evaluation
-│   └── classification_report.json
-└── demo/                     # Sample EuroSAT patches for quick testing
+│   └── best_fusion_model.pth   # Best checkpoint (~45 MB)
+│
+├── results/                    # Auto-generated by train.py
+│   ├── training_curves.png     # Loss & metric plots across epochs
+│   ├── confusion_matrix.png    # Per-class evaluation heatmap
+│   ├── classification_report.json
+│   └── training_history.json
+│
+└── demo/                      
 ```
 
 ---
